@@ -1,5 +1,5 @@
 #include "mbed.h"
-#include "neopixel.h"
+
 #include <cstdio>
 
 
@@ -8,7 +8,6 @@ DigitalOut trig(D2);
 InterruptIn echo(D3);
 
 
-NeoPixel strip(D6,8);
 
 // RTOS
 Semaphore sem(0);
@@ -44,7 +43,7 @@ void medir_distancia() {
         float distancia_cm = tiempo_us / 58.0f;
 
         // Envía a la cola
-        cola.put(&distancia_cm);
+        cola.try_put(&distancia_cm);
 
         ThisThread::sleep_for(500ms);
     }
@@ -52,29 +51,11 @@ void medir_distancia() {
 
 void mostrar_distancia() {
     while (true) {
-        strip.clear();
+        
         
         osEvent evt = cola.get();
         if (evt.status == osEventMessage) {
             float *d = (float*)evt.value.p;
-            if (*d <= 10.0){
-                int leds = 0;
-                
-                leds = (int)(*d *0.8);
-
-                printf("leds:%d",leds);
-                for (int i = 0; i <= leds; i++) {
-                    strip.setColor(i, 0x111100); // Formato 0xRRGGBB
-
-                }
-                strip.show();
-                
-            }else{
-                strip.clear();
-                strip.show(); 
-                
-            }
-
             printf("Distancia: %.2f cm\n", *d);
 
         }
